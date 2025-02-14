@@ -80,4 +80,8 @@ final class CharacterWorker: CharacterWorkerProtocol {
             }
         }
     }
+
+    func getImageData(forCharacterId characterId: Int64) -> Data? {
+        return storageManager.fetchImageData(forCharacterId: characterId)
+    }
 }

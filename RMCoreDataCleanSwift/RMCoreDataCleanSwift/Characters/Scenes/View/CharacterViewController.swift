@@ -10,7 +10,6 @@ import SnapKit
 
 final class CharacterViewController: UIViewController {
     var interactor: CharacterInteractorProtocol?
-    var storageManager: StorageManagerProtocol?
 
     private let tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
@@ -82,14 +81,17 @@ extension CharacterViewController: UITableViewDataSource {
 
         let character = characters[indexPath.row]
 
-        guard let imageData = storageManager?.fetchImageData(forCharacterId: character.id),
-              let image = UIImage(data: imageData) else {
-            return cell
+        interactor?.getCharacterImage(for: character.id) { imageData in
+            guard let imageData = imageData,
+                  let image = UIImage(data: imageData) else {
+                return
+            }
+
+            cell.configure(with: character, image: image)
         }
 
-        cell.configure(with: character, image: image)
-
         return cell
+
     }
 }
 

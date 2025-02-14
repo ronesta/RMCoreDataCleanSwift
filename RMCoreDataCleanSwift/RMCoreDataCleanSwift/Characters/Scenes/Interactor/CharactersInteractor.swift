@@ -26,4 +26,9 @@ final class CharactersInteractor: CharacterInteractorProtocol {
             self?.presenter.presentCharacters(response: response)
         }
     }
+
+    func getCharacterImage(for characterId: Int64, completion: @escaping (Data?) -> Void) {
+        let data = worker.getImageData(forCharacterId: characterId)
+        completion(data)
+    }
 }

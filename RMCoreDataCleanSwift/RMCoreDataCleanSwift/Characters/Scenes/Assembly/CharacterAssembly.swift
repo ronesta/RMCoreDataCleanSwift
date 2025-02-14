@@ -23,7 +23,6 @@ final class CharacterAssembly {
         )
 
         viewController.interactor = interactor
-        viewController.storageManager = storageManager
         presenter.viewController = viewController
 
         return viewController

@@ -10,4 +10,5 @@ import UIKit
 
 protocol CharacterInteractorProtocol {
     func getCharacters(request: CharacterModel.Request)
+    func getCharacterImage(for characterId: Int64, completion: @escaping (Data?) -> Void)
 }

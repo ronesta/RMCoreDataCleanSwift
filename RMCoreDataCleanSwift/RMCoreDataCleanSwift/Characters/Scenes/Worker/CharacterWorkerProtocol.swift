@@ -10,4 +10,5 @@ import UIKit
 
 protocol CharacterWorkerProtocol {
     func getCharacters(completion: @escaping ([Entity]) -> Void)
+    func getImageData(forCharacterId characterId: Int64) -> Data?
 }
