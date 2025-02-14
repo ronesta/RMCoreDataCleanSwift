@@ -9,7 +9,10 @@ import UIKit
 import SnapKit
 
 final class CharacterViewController: UIViewController {
-    let tableView: UITableView = {
+    var interactor: CharacterInteractorProtocol?
+    var storageManager: StorageManagerProtocol?
+
+    private let tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.separatorStyle = .none
         return tableView
@@ -40,71 +43,31 @@ final class CharacterViewController: UIViewController {
                            forCellReuseIdentifier: CharacterTableViewCell.id)
 
         tableView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
         }
     }
 
     private func getCharacters() {
-        characters = CoreDataManager.shared.fetchCharacters()
-
-        guard characters.isEmpty else {
-            self.tableView.reloadData()
-            return
-        }
-
-        NetworkManager.shared.getCharacters { [weak self] result, error in
-            if let error {
-                print("Error getting characters: \(error)")
-                return
-            }
-
-            guard let result else {
-                return
-            }
-
-            var imageCounter = 1
-
-            var charactersToSave: [(character: Character, imageData: Data)] = []
-
-            let group = DispatchGroup()
-
-            result.forEach { res in
-                group.enter()
-                NetworkManager.shared.loadImage(from: res.image) { data, error in
-                    defer {
-                        group.leave()
-                    }
-
-                    if let error {
-                        print("Failed to load image: \(error)")
-                        return
-                    }
-
-                    guard let data else {
-                        print("No data for image")
-                        return
-                    }
-
-                    charactersToSave.append((character: res, imageData: data))
-                }
-            }
-
-            group.notify(queue: .main) { [weak self] in
-                guard let self else {
-                    return
-                }
-
-                CoreDataManager.shared.saveCharacters(charactersToSave)
-
-                DispatchQueue.main.async {
-                    self.characters = CoreDataManager.shared.fetchCharacters()
-                    self.tableView.reloadData()
-                }
-            }
-        }
+        interactor?.getCharacters(request: CharacterModel.Request())
     }
 }
 
+// MARK: - CharacterViewProtocol
+extension CharacterViewController: CharacterViewProtocol {
+    func displayCharacters(viewModel: CharacterModel.ViewModel) {
+        self.characters = viewModel.characters
+        tableView.reloadData()
+    }
+
+    func displayError(_ message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alert.addAction(okAction)
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - UITableViewDataSource
 extension CharacterViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return characters.count
@@ -119,7 +82,7 @@ extension CharacterViewController: UITableViewDataSource {
 
         let character = characters[indexPath.row]
 
-        guard let imageData = CoreDataManager.shared.fetchImageData(forCharacterId: character.id),
+        guard let imageData = storageManager?.fetchImageData(forCharacterId: character.id),
               let image = UIImage(data: imageData) else {
             return cell
         }
@@ -130,6 +93,7 @@ extension CharacterViewController: UITableViewDataSource {
     }
 }
 
+// MARK: - UITableViewDelegate
 extension CharacterViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         128

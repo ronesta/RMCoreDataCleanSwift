@@ -9,11 +9,8 @@ import Foundation
 import UIKit
 import CoreData
 
-public final class CoreDataManager: NSObject {
-    static let shared = CoreDataManager()
-    private override init() {}
-
-    private let persistentContainer: NSPersistentContainer = {
+public final class CoreDataManager: NSObject, StorageManagerProtocol {
+    private static var persistentContainer: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "CoreDataModel")
         container.loadPersistentStores { _, error in
             if let error {
@@ -24,7 +21,7 @@ public final class CoreDataManager: NSObject {
     }()
 
     var context: NSManagedObjectContext {
-        return persistentContainer.viewContext
+        return CoreDataManager.persistentContainer.viewContext
     }
 
     func saveContext() {
